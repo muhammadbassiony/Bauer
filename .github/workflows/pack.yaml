@@ -127,3 +127,30 @@ jobs:
           juju-version: ${{ vars.JUJU_VERSION || '3/stable' }}
           juju-client-id: ${{ secrets.JUJU_CLIENT_ID }}
           juju-client-secret: ${{ secrets.JUJU_CLIENT_SECRET }}
+  
+  deploy-production:
+    needs: [pack-charm, pack-rock]
+    # if: ${{ github.event_name == 'push' }}
+    if: true
+    runs-on: [self-hosted-linux-amd64-noble-private-endpoint-medium]
+    permissions:
+      contents: read
+    environment:
+      name: production
+      url: ${{ vars.WEBSITE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Deploy
+        uses: ./.github/actions/deploy-ps7
+        with:
+          image-url: ${{ needs.pack-rock.outputs.image_url }}
+          app-name: ${{ vars.CHARM_NAME }}
+          controller-name: ${{ vars.JUJU_CONTROLLER_NAME }}
+          controller-address: ${{ vars.JUJU_CONTROLLER_ADDRESS }}
+          model-name: ${{ vars.JUJU_MODEL_NAME }}
+          juju-version: ${{ vars.JUJU_VERSION || '3/stable' }}
+          juju-client-id: ${{ secrets.JUJU_CLIENT_ID }}
+          juju-client-secret: ${{ secrets.JUJU_CLIENT_SECRET }}
